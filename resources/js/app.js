@@ -35,8 +35,8 @@ var  controllData = (
       addItems : function (type ,des , val) {
         var ID , newItem;
 
-        if (ID > 0) {
-          ID = data.allItems[type][data.allItems[type].length - 1] + 1;
+        if (data.allItems[type].length > 0) {
+          ID = data.allItems[type][data.allItems[type].length - 1].id + 1;
         } else {
           ID = 0;
         }
@@ -50,29 +50,42 @@ var  controllData = (
   
         return newItem;
         },
-        calculateBudget : function () {
-          calculateTotal("inc");
-          calculateTotal("exp");
+      deleteItem (type , id) {
+        var ids , index;
 
-          data.budget = data.total.inc - data.total.exp;
+        ids = data.allItems[type].map(function (cur) {
+          return cur.id;
+        })
 
-          if (data.budget > 0) {
-            data.percentage = Math.round(data.total.exp / data.budget * 100); 
-          } else {
-            data.percentage = -1;
-          }
-        },
-        getBudget : function () {
-          return {
-            budget : data.budget,
-            totalInc : data.total.inc,
-            totalExp : data.total.exp,
-            percentage : data.percentage
-          }
-        },
-        testing : function () {
-          console.log(data);
+        index = ids.indexOf(id);
+
+        if (index !== -1) {
+          data.allItems[type].splice(index , 1);
         }
+      },
+      calculateBudget : function () {
+        calculateTotal("inc");
+        calculateTotal("exp");
+
+        data.budget = data.total.inc - data.total.exp;
+
+        if (data.total.inc > 0) {
+          data.percentage = Math.round(data.total.exp / data.budget * 100); 
+        } else {
+          data.percentage = -1;
+        }
+      },
+      getBudget : function () {
+        return {
+          budget : data.budget,
+          totalInc : data.total.inc,
+          totalExp : data.total.exp,
+          percentage : data.percentage
+        }
+      },
+      testing : function () {
+        console.log(data);
+      }
 
     } 
     
@@ -91,7 +104,12 @@ var controllUI =(
       inputValue : '.add__value',
       inputBtn : '.add__btn',
       incomeContainer : '.income__list',
-      expensesContainer : '.expenses__list'
+      expensesContainer : '.expenses__list',
+      budgetLabel : '.budget__value',
+      incomeLabel : '.budget__income--value',
+      expensesLabel : '.budget__expenses--value',
+      percentageLabel : '.budget__expenses--percentage',
+      container : '.container'
     }
 
     return {
@@ -103,13 +121,12 @@ var controllUI =(
 
         if (type === 'inc') {
           element = DOMstrings.incomeContainer;
-          html = '<div class="item clearfix" id="income-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>'
+          html = '<div class="item clearfix" id="inc-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
         } else if (type === 'exp') {
           element = DOMstrings.expensesContainer;
-          html = '<div class="item clearfix" id="expense-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>'
+          html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">%percentage%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
         }
-        // 大文字かも
-        newHtml = html.replace('%id%' , obj.ID);
+        newHtml = html.replace('%id%' , obj.id);
         newHtml = newHtml.replace('%description%' , obj.description);
         newHtml = newHtml.replace('%value%' , obj.value);
 
@@ -126,6 +143,18 @@ var controllUI =(
           cur.value = ''
         })
         fieldsArr[0].focus();
+      },
+      displayBudget : function (obj) {
+        document.querySelector(DOMstrings.budgetLabel).textContent = obj.budget;
+        document.querySelector(DOMstrings.incomeLabel).textContent = obj.totalInc;
+        document.querySelector(DOMstrings.expensesLabel).textContent = obj.totalExp;
+        
+        if (obj.percentage > 0) {
+          document.querySelector(DOMstrings.percentageLabel).textContent = obj.percentage + '%';
+        } else {
+          document.querySelector(DOMstrings.percentageLabel).textContent = '---';
+        }
+
       },
       getInput : function () {
         return {
@@ -153,13 +182,15 @@ var controller =(
           addItems();
         }
       })
-
+      document.querySelector(DOM.container).addEventListener('click' , ctrlDelete)
     }
 
     var updateBudget = function () {
       ctrlData.calculateBudget();
+
       var budget = ctrlData.getBudget();
-      console.log(budget);
+
+      ctrlUI.displayBudget(budget);
     }
 
 
@@ -176,14 +207,34 @@ var controller =(
         ctrlUI.cleaeFields();
   
         updateBudget();
-
       }
+      
+      
+    }
+    
+    var ctrlDelete = function (event) {
+      var itemID , splitID , type , ID;
 
+      itemID = event.target.parentNode.parentNode.parentNode.parentNode.id;
 
+      if (itemID) {
+        splitID = itemID.split('-');
+        type = splitID[0];
+        ID = parseInt(splitID[1]) ;
+
+        ctrlData.deleteItem(type , ID);
+      }
     }
 
     return {
       init : function () {
+        ctrlUI.displayBudget({
+          budget : 0,
+          totalInc : 0,
+          totalExp : 0,
+          percentage : -1
+        });
+        
         setupEventListner();
       }
     }
