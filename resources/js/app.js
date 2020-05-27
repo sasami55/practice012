@@ -15,8 +15,8 @@ var  controllData = (
       var sum = 0;
       data.allItems[type].forEach(function (cur) {
         sum += cur.value;
-        data.total[type] = sum;
       })
+      data.total[type] = sum;
     }
     var data = {
       allItems : {
@@ -70,7 +70,7 @@ var  controllData = (
         data.budget = data.total.inc - data.total.exp;
 
         if (data.total.inc > 0) {
-          data.percentage = Math.round(data.total.exp / data.budget * 100); 
+          data.percentage = Math.round(data.total.exp / data.total.inc * 100); 
         } else {
           data.percentage = -1;
         }
@@ -132,6 +132,13 @@ var controllUI =(
 
         document.querySelector(element).insertAdjacentHTML('beforeend' , newHtml);
       },
+      deleteListItem : function (selectorID) {
+
+        // var el = document.getElementById(selectorID);
+        var el = document.querySelector("#" + selectorID);
+        el.parentNode.removeChild(el);
+
+      },
       cleaeFields : function () {
         var fields
 
@@ -191,7 +198,13 @@ var controller =(
       var budget = ctrlData.getBudget();
 
       ctrlUI.displayBudget(budget);
-    }
+    };
+
+    var updatePercentage = function () {
+
+
+
+    };
 
 
     var addItems = function () {
@@ -207,6 +220,7 @@ var controller =(
         ctrlUI.cleaeFields();
   
         updateBudget();
+        updatePercentage();
       }
       
       
@@ -223,6 +237,11 @@ var controller =(
         ID = parseInt(splitID[1]) ;
 
         ctrlData.deleteItem(type , ID);
+
+        ctrlUI.deleteListItem(itemID);
+
+        updateBudget();
+        updatePercentage();
       }
     }
 
