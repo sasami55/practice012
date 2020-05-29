@@ -5,7 +5,22 @@ var  controllData = (
       this.id = id;
       this.description = description;
       this.value = value;
+      this.percentage = -1;
     }
+
+    Expense.prototype.calculatePercentage = function (totalIncome) {
+
+      if (totalIncome > 0) {
+        this.percentage = Math.round(this.value / totalIncome * 100) 
+      } else {
+        this.percentage = -1;
+      }
+    }
+
+    Expense.prototype.getPercentage = function () {
+      return this.percentage;
+    }
+
     var Income = function (id , description , value) {
       this.id = id;
       this.description = description;
@@ -82,6 +97,17 @@ var  controllData = (
           totalExp : data.total.exp,
           percentage : data.percentage
         }
+      },
+      calculatePercentages : function () {
+        data.allItems.exp.forEach(function (cur) {
+          cur.calculatePercentage(data.total.inc);
+        })
+      },
+      getPercentages : function () {
+        var allPerc = data.allItems.exp.map(function (cur) {
+          return cur.getPercentage();
+        })
+        return allPerc;
       },
       testing : function () {
         console.log(data);
@@ -201,6 +227,10 @@ var controller =(
     };
 
     var updatePercentage = function () {
+
+      ctrlData.calculatePercentages();
+      var percentage = ctrlData.getPercentages();
+      console.log(percentage)
 
 
 
